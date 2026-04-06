@@ -1,0 +1,31 @@
+# Build artifacts
+target/
+node_modules/
+
+# Solana keypairs (sensitive)
+*-keypair.json
+
+# Lock files (regenerated per environment)
+yarn.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude Code local settings
+.claude/
+
+# Reference docs (not challenge solutions)
+Quasar Docs/
+
+# Anchor
+.anchor/
+
+# Misc
+*.so
