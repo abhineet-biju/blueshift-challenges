@@ -1,0 +1,8 @@
+[project]
+name = "blueshift_quasar_flash_loan"
+
+[toolchain]
+type = "solana"
+
+[testing]
+framework = "quasarsvm-rust"

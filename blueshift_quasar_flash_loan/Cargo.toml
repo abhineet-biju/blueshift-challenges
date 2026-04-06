@@ -1,0 +1,37 @@
+[package]
+name = "blueshift_quasar_flash_loan"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = [
+    'cfg(target_os, values("solana"))',
+]
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+alloc = []
+client = []
+debug = []
+
+[dependencies]
+quasar-lang = { git = "https://github.com/blueshift-gg/quasar" }
+quasar-spl = { git = "https://github.com/blueshift-gg/quasar" }
+
+[dev-dependencies]
+quasar-svm = { git = "https://github.com/blueshift-gg/quasar-svm" }
+solana-instruction = "3.0.0"
+solana-instructions-sysvar = "3.0.0"
