@@ -1,0 +1,17 @@
+[package]
+name = "pinocchio-secp256r1-instruction"
+authors = ["Dean Little <@deanmlittle>"]
+description = "Pinocchio helper functions to deserialize Secp256r1 instructions"
+version = "0.1.2"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["lib"]
+
+[features]
+default = []
+perf = []
+
+[dependencies]
+pinocchio = "^0.8.0"
