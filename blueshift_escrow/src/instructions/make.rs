@@ -1,4 +1,4 @@
-use pinocchio::{error::ProgramError, AccountView};
+use pinocchio::{error::ProgramError, AccountView, Address};
 use pinocchio_token::state::{Account as TokenAccount, Mint};
 
 pub struct MakeAccounts<'a> {
@@ -58,5 +58,28 @@ impl<'a> TryFrom<&'a [AccountView]> for MakeAccounts<'a> {
             system_program,
             token_program,
         })
+    }
+}
+
+pub struct MakeInstructionData {
+    pub seed: u64,
+    pub receive: u64,
+    pub amount: u64,
+}
+
+impl<'a> TryFrom<&'a [u8]> for MakeInstructionData {
+    type Error = ProgramError;
+
+    fn try_from(data: &'a [u8]) -> Result<Self, Self::Error> {
+        if data.len() != size_of::<u64>() * 3 {
+            return Err(ProgramError::InvalidInstructionData);
+        }
+
+        let seed = u64::from_le_bytes(data[0..8].try_into().unwrap());
+        let receive = u64::from_le_bytes(data[8..16].try_into().unwrap());
+        let amount = u64::from_le_bytes(data[16..24].try_into().unwrap());
+
+        //Basic checks
+        if amount 
     }
 }
