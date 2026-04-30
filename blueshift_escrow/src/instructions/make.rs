@@ -1,9 +1,20 @@
-use pinocchio::{error::ProgramError, AccountView, Address};
-use pinocchio_token::state::{Account as TokenAccount, Mint};
+use crate::state::Escrow;
+use core::mem::size_of;
+use pinocchio::{
+    cpi::{Seed, Signer},
+    error::ProgramError,
+    AccountView, Address, ProgramResult,
+};
+use pinocchio_associated_token_account::instructions::Create as CreateAssociatedTokenAccount;
+use pinocchio_system::instructions::CreateAccount;
+use pinocchio_token::{
+    instructions::Transfer as TokenTransfer,
+    state::{Account as TokenAccount, Mint},
+};
 
 pub struct MakeAccounts<'a> {
     pub maker: &'a AccountView,
-    pub escrow: &'a AccountView,
+    pub escrow: &'a mut AccountView,
     pub mint_a: &'a AccountView,
     pub mint_b: &'a AccountView,
     pub maker_ata_a: &'a AccountView,
@@ -12,10 +23,10 @@ pub struct MakeAccounts<'a> {
     pub token_program: &'a AccountView,
 }
 
-impl<'a> TryFrom<&'a [AccountView]> for MakeAccounts<'a> {
+impl<'a> TryFrom<&'a mut [AccountView]> for MakeAccounts<'a> {
     type Error = ProgramError;
 
-    fn try_from(accounts: &'a [AccountView]) -> Result<Self, Self::Error> {
+    fn try_from(accounts: &'a mut [AccountView]) -> Result<Self, Self::Error> {
         let [maker, escrow, mint_a, mint_b, maker_ata_a, vault, system_program, token_program, _] =
             accounts
         else {
@@ -80,6 +91,105 @@ impl<'a> TryFrom<&'a [u8]> for MakeInstructionData {
         let amount = u64::from_le_bytes(data[16..24].try_into().unwrap());
 
         //Basic checks
-        if amount 
+        if amount == 0 || receive == 0 {
+            return Err(ProgramError::InvalidInstructionData);
+        }
+
+        Ok(Self {
+            seed,
+            receive,
+            amount,
+        })
+    }
+}
+
+pub struct Make<'a> {
+    pub accounts: MakeAccounts<'a>,
+    pub instruction_data: MakeInstructionData,
+    pub bump: u8,
+}
+
+impl<'a> TryFrom<(&'a mut [AccountView], &'a [u8])> for Make<'a> {
+    type Error = ProgramError;
+
+    fn try_from((accounts, data): (&'a mut [AccountView], &'a [u8])) -> Result<Self, Self::Error> {
+        let accounts = MakeAccounts::try_from(accounts)?;
+        let instruction_data = MakeInstructionData::try_from(data)?;
+
+        let (_, bump) = Address::derive_program_address(
+            &[
+                b"escrow",
+                accounts.maker.address().as_ref(),
+                instruction_data.seed.to_le_bytes().as_ref(),
+            ],
+            &crate::ID,
+        )
+        .ok_or(ProgramError::InvalidSeeds)?;
+
+        let seed_binding = instruction_data.seed.to_le_bytes();
+        let bump_binding = [bump];
+
+        let escrow_seeds = [
+            Seed::from(b"escrow"),
+            Seed::from(accounts.maker.address().as_ref()),
+            Seed::from(seed_binding.as_ref()),
+            Seed::from(bump_binding.as_ref()),
+        ];
+
+        let signer = Signer::from(&escrow_seeds);
+
+        CreateAccount::with_minimum_balance(
+            accounts.maker,
+            accounts.escrow,
+            Escrow::LEN as u64,
+            &crate::ID,
+            None,
+        )?
+        .invoke_signed(&[signer])?;
+
+        CreateAssociatedTokenAccount {
+            funding_account: accounts.maker,
+            account: accounts.vault,
+            wallet: accounts.escrow,
+            mint: accounts.mint_a,
+            system_program: accounts.system_program,
+            token_program: accounts.token_program,
+        }
+        .invoke()?;
+
+        Ok(Self {
+            accounts,
+            instruction_data,
+            bump,
+        })
+    }
+}
+
+impl<'a> Make<'a> {
+    pub const DISCRIMINATOR: &'a u8 = &0;
+
+    pub fn process(&mut self) -> ProgramResult {
+        let mut escrow_data = self.accounts.escrow.try_borrow_mut()?;
+        let escrow = Escrow::load_mut(escrow_data.as_mut())?;
+
+        escrow.set_inner(
+            self.instruction_data.seed,
+            self.accounts.maker.address(),
+            self.accounts.mint_a.address(),
+            self.accounts.mint_b.address(),
+            self.instruction_data.receive,
+            [self.bump],
+        );
+
+        //Transfer tokens to vault
+        TokenTransfer::new(
+            self.accounts.maker_ata_a,
+            self.accounts.vault,
+            self.accounts.maker,
+            self.instruction_data.amount,
+        )
+        .invoke()?;
+
+        Ok(())
     }
 }

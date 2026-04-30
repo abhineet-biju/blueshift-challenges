@@ -16,6 +16,7 @@ name = "blueshift_escrow"
 version = "0.1.0"
 dependencies = [
  "pinocchio",
+ "pinocchio-associated-token-account",
  "pinocchio-system",
  "pinocchio-token",
 ]
@@ -104,6 +105,18 @@ dependencies = [
  "solana-account-view",
  "solana-address",
  "solana-define-syscall 5.1.0",
+ "solana-instruction-view",
+ "solana-program-error",
+]
+
+[[package]]
+name = "pinocchio-associated-token-account"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c552da2a965b33511ac54494e434e69be0ae12da1619a72594b76703c3dca211"
+dependencies = [
+ "solana-account-view",
+ "solana-address",
  "solana-instruction-view",
  "solana-program-error",
 ]

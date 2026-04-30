@@ -12,19 +12,19 @@ pub struct Escrow {
 }
 
 impl Escrow {
-    pub const LEN: usize = size_of<u64>() 
-        + size_of<Address>() 
-        + size_of<Address>() 
-        + size_of<Address>() 
-        + size_of<u64>()
-        + size_of<[u8;1]();
+    pub const LEN: usize = size_of::<u64>()
+        + size_of::<Address>()
+        + size_of::<Address>()
+        + size_of::<Address>()
+        + size_of::<u64>()
+        + size_of::<[u8; 1]>();
 
     #[inline(always)]
-    pub fn load_mut(bytes: &mut[u8]) -> Result<&Self, ProgramError> {
+    pub fn load_mut(bytes: &mut [u8]) -> Result<&mut Self, ProgramError> {
         if bytes.len() != Escrow::LEN {
             return Err(ProgramError::InvalidAccountData);
         }
-        Ok(unsafe {&mut *core::mem::transmute::<*mut u8, *mut Self>(bytes.as_mut_ptr())})
+        Ok(unsafe { &mut *core::mem::transmute::<*mut u8, *mut Self>(bytes.as_mut_ptr()) })
     }
 
     #[inline(always)]
@@ -32,7 +32,7 @@ impl Escrow {
         if bytes.len() != Escrow::LEN {
             return Err(ProgramError::InvalidAccountData);
         }
-        Ok(unsafe {&*core::mem::transmute::<*const u8, *const Self>(bytes.as_ptr())})
+        Ok(unsafe { &*core::mem::transmute::<*const u8, *const Self>(bytes.as_ptr()) })
     }
 
     #[inline(always)]
@@ -61,16 +61,24 @@ impl Escrow {
     }
 
     #[inline(always)]
-    pub fn set_bump(&mut self, bump: u8) {
+    pub fn set_bump(&mut self, bump: [u8; 1]) {
         self.bump = bump;
     }
 
     #[inline(always)]
-    pub fn set_inner(&mut self, seed: u64, maker: Pubkey, mint_a: Pubkey, mint_b: Pubkey, receive: u64, bump: [u8;1]) {
+    pub fn set_inner(
+        &mut self,
+        seed: u64,
+        maker: &Address,
+        mint_a: &Address,
+        mint_b: &Address,
+        receive: u64,
+        bump: [u8; 1],
+    ) {
         self.seed = seed;
-        self.maker = maker;
-        self.mint_a = mint_a;
-        self.mint_b = mint_b;
+        self.maker = *maker;
+        self.mint_a = *mint_a;
+        self.mint_b = *mint_b;
         self.receive = receive;
         self.bump = bump;
     }
