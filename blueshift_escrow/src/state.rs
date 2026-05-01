@@ -41,18 +41,18 @@ impl Escrow {
     }
 
     #[inline(always)]
-    pub fn set_maker(&mut self, maker: Address) {
-        self.maker = maker;
+    pub fn set_maker(&mut self, maker: &Address) {
+        self.maker = *maker;
     }
 
     #[inline(always)]
-    pub fn set_mint_a(&mut self, mint_a: Address) {
-        self.mint_a = mint_a;
+    pub fn set_mint_a(&mut self, mint_a: &Address) {
+        self.mint_a = *mint_a;
     }
 
     #[inline(always)]
-    pub fn set_mint_b(&mut self, mint_b: Address) {
-        self.mint_b = mint_b;
+    pub fn set_mint_b(&mut self, mint_b: &Address) {
+        self.mint_b = *mint_b;
     }
 
     #[inline(always)]
