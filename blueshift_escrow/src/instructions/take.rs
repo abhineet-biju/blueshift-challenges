@@ -47,18 +47,9 @@ impl<'a> TryFrom<&'a mut [AccountView]> for TakeAccounts<'a> {
             return Err(ProgramError::InvalidAccountData);
         }
 
-        let taker_ata_a_data = TokenAccount::from_account_view(taker_ata_a)?;
         let taker_ata_b_data = TokenAccount::from_account_view(taker_ata_b)?;
-        let maker_ata_b_data = TokenAccount::from_account_view(maker_ata_b)?;
 
-        if !taker_ata_a_data.is_initialized()
-            || !taker_ata_b_data.is_initialized()
-            || !maker_ata_b_data.is_initialized()
-        {
-            return Err(ProgramError::InvalidAccountData);
-        }
-
-        if taker_ata_a_data.mint() != mint_a.address() {
+        if !taker_ata_b_data.is_initialized() {
             return Err(ProgramError::InvalidAccountData);
         }
 
@@ -66,19 +57,7 @@ impl<'a> TryFrom<&'a mut [AccountView]> for TakeAccounts<'a> {
             return Err(ProgramError::InvalidAccountData);
         }
 
-        if maker_ata_b_data.mint() != mint_b.address() {
-            return Err(ProgramError::InvalidAccountData);
-        }
-
-        if taker_ata_a_data.owner() != taker.address() {
-            return Err(ProgramError::InvalidAccountData);
-        }
-
         if taker_ata_b_data.owner() != taker.address() {
-            return Err(ProgramError::InvalidAccountData);
-        }
-
-        if maker_ata_b_data.owner() != maker.address() {
             return Err(ProgramError::InvalidAccountData);
         }
 
@@ -156,6 +135,31 @@ impl<'a> Take<'a> {
             token_program: self.accounts.token_program,
         }
         .invoke()?;
+
+        {
+            let taker_ata_a_data = TokenAccount::from_account_view(self.accounts.taker_ata_a)?;
+            let maker_ata_b_data = TokenAccount::from_account_view(self.accounts.maker_ata_b)?;
+
+            if !taker_ata_a_data.is_initialized() || !maker_ata_b_data.is_initialized() {
+                return Err(ProgramError::InvalidAccountData);
+            }
+
+            if taker_ata_a_data.mint() != self.accounts.mint_a.address() {
+                return Err(ProgramError::InvalidAccountData);
+            }
+
+            if maker_ata_b_data.mint() != self.accounts.mint_b.address() {
+                return Err(ProgramError::InvalidAccountData);
+            }
+
+            if taker_ata_a_data.owner() != self.accounts.taker.address() {
+                return Err(ProgramError::InvalidAccountData);
+            }
+
+            if maker_ata_b_data.owner() != self.accounts.maker.address() {
+                return Err(ProgramError::InvalidAccountData);
+            }
+        }
 
         let escrow_data = self.accounts.escrow.try_borrow_mut()?;
         let escrow = Escrow::load(escrow_data.as_ref())?;
