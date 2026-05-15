@@ -6,7 +6,7 @@ pub struct LoanData {
     pub balance: u64,
 }
 
-pub fn get_token_amount(data: &[u8], account: &AccountView) -> Result<u64, ProgramError> {
+pub fn get_token_amount(account: &AccountView) -> Result<u64, ProgramError> {
     if !account.owned_by(&pinocchio_token::ID) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -14,6 +14,8 @@ pub fn get_token_amount(data: &[u8], account: &AccountView) -> Result<u64, Progr
     if account.data_len().ne(&pinocchio_token::state::Account::LEN) {
         return Err(ProgramError::InvalidAccountData);
     }
+
+    let data = account.try_borrow()?;
 
     if data.len() != pinocchio_token::state::Account::LEN {
         return Err(ProgramError::InvalidAccountData);
