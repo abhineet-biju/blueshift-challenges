@@ -15,7 +15,7 @@ pub const ID: Address = Address::from_str_const("2222222222222222222222222222222
 
 fn process_instruction(
     _program_id: &Address,
-    accounts: &[AccountView],
+    accounts: &mut [AccountView],
     instruction_data: &[u8],
 ) -> ProgramResult {
     match instruction_data.split_first() {
