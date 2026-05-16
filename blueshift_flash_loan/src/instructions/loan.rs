@@ -1,7 +1,6 @@
+use crate::Repay;
 use pinocchio::cpi::{Seed, Signer};
 use pinocchio::sysvars::instructions::{Instructions, INSTRUCTIONS_ID};
-use pinocchio::sysvars::rent::Rent;
-use pinocchio::sysvars::Sysvar;
 use pinocchio::{error::ProgramError, AccountView, ProgramResult};
 use pinocchio_system::instructions::CreateAccount;
 use pinocchio_token::instructions::Transfer as TokenTransfer;
@@ -128,7 +127,6 @@ impl<'a> Loan<'a> {
         // Open the LoanData account and create
         // a mutable slice to push the Loan struct to it
         let size = size_of::<LoanData>() * self.instruction_data.amounts.len();
-        let lamports = Rent::get()?.try_minimum_balance(size);
 
         CreateAccount::with_minimum_balance(
             self.accounts.borrower,
@@ -176,8 +174,10 @@ impl<'a> Loan<'a> {
                 self.accounts.protocol,
                 *amount,
             )
-            .invoke_signed(&[signer])?;
+            .invoke_signed(&[signer.clone()])?;
         }
+
+        drop(loan_data); //drop to clear mutable reference
 
         // Introspecting Repay instruction
         let instruction_sysvar =
@@ -192,7 +192,12 @@ impl<'a> Loan<'a> {
             return Err(ProgramError::InvalidInstructionData);
         }
 
-        if last_instruction.get_instruction_data().first() != Repay::DISCRIMINATOR {
+        if last_instruction
+            .get_instruction_data()
+            .first()
+            .ok_or(ProgramError::InvalidInstructionData)?
+            != Repay::DISCRIMINATOR
+        {
             return Err(ProgramError::InvalidInstructionData);
         }
 
