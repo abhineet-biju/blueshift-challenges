@@ -3,4 +3,11 @@ name = "blueshift_quantum_vault"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["lib", "cdylib"]
+
 [dependencies]
+pinocchio = "0.11.1"
+pinocchio-system = "0.6.1"
+solana-nostd-sha256 = "0.2.0"
+solana-winternitz = "0.1.1"
