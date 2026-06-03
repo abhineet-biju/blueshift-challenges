@@ -11,10 +11,10 @@ pub struct OpenVaultAccounts<'a> {
     pub vault: &'a AccountView,
 }
 
-impl<'a> TryFrom<&'a [AccountView]> for OpenVaultAccounts<'a> {
+impl<'a> TryFrom<&'a mut [AccountView]> for OpenVaultAccounts<'a> {
     type Error = ProgramError;
 
-    fn try_from(accounts: &'a [AccountView]) -> Result<Self, Self::Error> {
+    fn try_from(accounts: &'a mut [AccountView]) -> Result<Self, Self::Error> {
         let [payer, vault, _system_program] = accounts else {
             return Err(ProgramError::NotEnoughAccountKeys);
         };
@@ -51,10 +51,10 @@ pub struct OpenVault<'a> {
     pub instruction_data: OpenVaultInstructionData,
 }
 
-impl<'a> TryFrom<(&'a [AccountView], &'a [u8])> for OpenVault<'a> {
+impl<'a> TryFrom<(&'a mut [AccountView], &'a [u8])> for OpenVault<'a> {
     type Error = ProgramError;
 
-    fn try_from((accounts, data): (&'a [AccountView], &'a [u8])) -> Result<Self, Self::Error> {
+    fn try_from((accounts, data): (&'a mut [AccountView], &'a [u8])) -> Result<Self, Self::Error> {
         let accounts = OpenVaultAccounts::try_from(accounts)?;
         let instruction_data = OpenVaultInstructionData::try_from(data)?;
 

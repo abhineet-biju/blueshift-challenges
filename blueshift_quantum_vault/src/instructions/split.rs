@@ -80,7 +80,7 @@ impl<'a> TryFrom<(&'a mut [AccountView], &'a [u8])> for SplitVault<'a> {
 }
 
 impl<'a> SplitVault<'a> {
-    pub const ID: &'a u8 = &1;
+    pub const DISCRIMINATOR: &'a u8 = &1;
 
     pub fn process(&mut self) -> ProgramResult {
         // Assemble Split message
