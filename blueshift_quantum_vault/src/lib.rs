@@ -1,9 +1,7 @@
 #![no_std]
-use pinocchio::{AccountView, Address, ProgramResult, entrypoint, error::ProgramError, nostd_panic_handler}
+use pinocchio::{entrypoint, error::ProgramError, AccountView, Address, ProgramResult};
 
 entrypoint!(process_instruction);
-
-nostd_panic_handler!();
 
 pub mod instructions;
 pub use instructions::*;
@@ -12,11 +10,17 @@ pub const ID: Address = Address::from_str_const("2222222222222222222222222222222
 
 fn process_instruction(
     _program_id: &Address,
-    accounts: &[AccountView],
-    instruction_data: &[u8]
-    ) -> ProgramResult {
+    accounts: &mut [AccountView],
+    instruction_data: &[u8],
+) -> ProgramResult {
     match instruction_data.split_first() {
+        Some((OpenVault::DISCTIMINATOR, data)) => OpenVault::try_from((accounts, data))?.process(),
+        Some((SplitVault::DISCRIMINATOR, data)) => {
+            SplitVault::try_from((accounts, data))?.process()
+        }
+        Some((CloseVault::DISCRIMINATOR, data)) => {
+            CloseVault::try_from((accounts, data))?.process()
+        }
+        _ => return Err(ProgramError::InvalidInstructionData),
     }
 }
-
-
