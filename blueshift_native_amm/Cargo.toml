@@ -1,0 +1,14 @@
+[package]
+name = "blueshift_native_amm"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+constant-product-curve = { git = "https://github.com/deanmlittle/constant-product-curve", version = "0.1.0" }
+pinocchio = "0.11.2"
+pinocchio-associated-token-account = "0.4.0"
+pinocchio-system = "0.6.1"
+pinocchio-token = "0.7.0"
