@@ -13,9 +13,15 @@ pub use state::*;
 pub const ID: Address = Address::from_str_const("22222222222222222222222222222222222222222222");
 
 fn process_instruction(
-    _program_id: &AccountView,
+    _program_id: &Address,
     accounts: &mut [AccountView],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    match instruction_data.split_first() {}
+    match instruction_data.split_first() {
+        Some((Initialize::DISCRIMINATOR, data)) => {
+            Initialize::try_from((accounts, data))?.process()
+        }
+        Some((Deposit::DISCRIMINATOR, data)) => Deposit::try_from((accounts, data))?.process(),
+        _ => Err(ProgramError::InvalidInstructionData),
+    }
 }
