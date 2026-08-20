@@ -147,7 +147,7 @@ impl<'a> Initialize<'a> {
             Address::from(self.instruction_data.mint_y),
             self.instruction_data.fee,
             self.instruction_data.config_bump,
-        );
+        )?;
 
         Ok(())
     }
