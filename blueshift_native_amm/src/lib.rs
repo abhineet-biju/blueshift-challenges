@@ -22,6 +22,7 @@ fn process_instruction(
             Initialize::try_from((accounts, data))?.process()
         }
         Some((Deposit::DISCRIMINATOR, data)) => Deposit::try_from((accounts, data))?.process(),
+        Some((Withdraw::DISCRIMINATOR, data)) => Withdraw::try_from((accounts, data))?.process(),
         _ => Err(ProgramError::InvalidInstructionData),
     }
 }
