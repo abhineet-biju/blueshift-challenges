@@ -23,6 +23,7 @@ fn process_instruction(
         }
         Some((Deposit::DISCRIMINATOR, data)) => Deposit::try_from((accounts, data))?.process(),
         Some((Withdraw::DISCRIMINATOR, data)) => Withdraw::try_from((accounts, data))?.process(),
+        Some((Swap::DISCRIMINATOR, data)) => Swap::try_from((accounts, data))?.process(),
         _ => Err(ProgramError::InvalidInstructionData),
     }
 }
