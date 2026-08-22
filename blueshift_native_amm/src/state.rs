@@ -39,7 +39,7 @@ impl Config {
 //Reading helpers
 impl Config {
     #[inline(always)]
-    pub fn load(account: &AccountView) -> Result<Ref<Self>, ProgramError> {
+    pub fn load(account: &AccountView) -> Result<Ref<'_, Self>, ProgramError> {
         if account.data_len() != Self::LEN {
             return Err(ProgramError::InvalidAccountData);
         }
@@ -105,7 +105,7 @@ impl Config {
 //Writing helpers
 impl Config {
     #[inline(always)]
-    pub fn load_mut(account: &mut AccountView) -> Result<RefMut<Self>, ProgramError> {
+    pub fn load_mut(account: &mut AccountView) -> Result<RefMut<'_, Self>, ProgramError> {
         if account.data_len() != Self::LEN {
             return Err(ProgramError::InvalidAccountData);
         }
@@ -188,12 +188,12 @@ impl Config {
         config_bump: [u8; 1],
     ) -> Result<(), ProgramError> {
         self.set_state(AmmState::Initialized as u8)?;
-        self.set_seed(seed);
-        self.set_authority(authority);
-        self.set_mint_x(mint_x);
-        self.set_mint_y(mint_y);
+        self.set_seed(seed)?;
+        self.set_authority(authority)?;
+        self.set_mint_x(mint_x)?;
+        self.set_mint_y(mint_y)?;
         self.set_fee(fee)?;
-        self.set_config_bump(config_bump);
+        self.set_config_bump(config_bump)?;
         Ok(())
     }
 
