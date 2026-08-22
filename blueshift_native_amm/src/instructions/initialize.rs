@@ -19,7 +19,7 @@ impl<'a> TryFrom<&'a mut [AccountView]> for InitializeAccounts<'a> {
     type Error = ProgramError;
 
     fn try_from(acccounts: &'a mut [AccountView]) -> Result<Self, Self::Error> {
-        let [initializer, mint_lp, config] = acccounts else {
+        let [initializer, mint_lp, config, ..] = acccounts else {
             return Err(ProgramError::NotEnoughAccountKeys);
         };
 
@@ -93,6 +93,8 @@ impl<'a> Initialize<'a> {
     pub const DISCRIMINATOR: &'a u8 = &0;
 
     pub fn process(&mut self) -> ProgramResult {
+        const LEGACY_RENT_EXEMPTION_MULTIPLIER: u64 = 2;
+
         //Initializing seeds for signing
         let seed_binding = self.instruction_data.seed.to_le_bytes();
         let config_seeds = [
@@ -112,23 +114,35 @@ impl<'a> Initialize<'a> {
         let config_signer = Signer::from(&config_seeds);
         let mint_lp_signer = Signer::from(&mint_lp_seeds);
 
-        CreateAccount::with_minimum_balance(
+        let mut create_config = CreateAccount::with_minimum_balance(
             self.accounts.initializer,
             self.accounts.config,
             Config::LEN as u64,
             &ID,
             None,
-        )?
-        .invoke_signed(&[config_signer])?;
+        )?;
 
-        CreateAccount::with_minimum_balance(
+        create_config.lamports = create_config
+            .lamports
+            .checked_mul(LEGACY_RENT_EXEMPTION_MULTIPLIER)
+            .ok_or(ProgramError::InvalidArgument)?;
+
+        create_config.invoke_signed(&[config_signer])?;
+
+        let mut create_mint_lp = CreateAccount::with_minimum_balance(
             self.accounts.initializer,
             self.accounts.mint_lp,
             Mint::LEN as u64,
             &pinocchio_token::ID,
             None,
-        )?
-        .invoke_signed(&[mint_lp_signer])?;
+        )?;
+
+        create_mint_lp.lamports = create_mint_lp
+            .lamports
+            .checked_mul(LEGACY_RENT_EXEMPTION_MULTIPLIER)
+            .ok_or(ProgramError::InvalidArgument)?;
+
+        create_mint_lp.invoke_signed(&[mint_lp_signer])?;
 
         InitializeMint2::new(
             self.accounts.mint_lp,
