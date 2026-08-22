@@ -1,10 +1,8 @@
 #![no_std]
-use pinocchio::{
-    AccountView, Address, ProgramResult, entrypoint, error::ProgramError, nostd_panic_handler,
-};
+use pinocchio::{AccountView, Address, ProgramResult, entrypoint, error::ProgramError};
 
 entrypoint!(process_instruction);
-nostd_panic_handler!();
+
 pub mod instructions;
 pub mod state;
 pub use instructions::*;
